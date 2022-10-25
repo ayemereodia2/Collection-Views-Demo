@@ -225,7 +225,7 @@ class ImageCell: UICollectionViewCell {
     
     override init(frame: CGRect) {
         imageView = UIImageView(frame: .zero)
-        imageView.contentMode = .center
+        imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         
         super.init(frame: frame)
@@ -233,11 +233,12 @@ class ImageCell: UICollectionViewCell {
         addSubview(imageView)
         imageView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            imageView.topAnchor.constraint(equalTo: topAnchor),
-            imageView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            imageView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            imageView.trailingAnchor.constraint(equalTo: trailingAnchor)
+            imageView.topAnchor.constraint(equalTo: topAnchor, constant: 1),
+            imageView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -1),
+            imageView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 1),
+            imageView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -1)
         ])
+        backgroundColor = .yellow
     }
     
     required init?(coder: NSCoder) {
@@ -414,40 +415,35 @@ class MosaicLayout: UICollectionViewLayout {
     
     private func determinY2(_ itemIndexOnCurrentRow: Int, _ rowHeight: CGFloat, _ rowIndex: CGFloat) -> CGFloat {
         let y: CGFloat
+        let colRange = 0...2
+        let oddColRange = 1...3
         
-        //if Int(rowIndex) %  2 == 0 {
-            if rowIndex == 0 && itemIndexOnCurrentRow < 2  {
-                y = 0
-            } else if rowIndex == 0 && itemIndexOnCurrentRow >= 3 {
-                y = rowHeight / 2
+        if Int(rowIndex) % 2 == 0 {
+            if colRange.contains(itemIndexOnCurrentRow) {
+                y = rowHeight * rowIndex
             } else {
-                if itemIndexOnCurrentRow < 3 {
-                    y = rowHeight * rowIndex
-                } else {
-                    y = (rowHeight * rowIndex) + (rowHeight / 2)
-                }
-                
+                y = (rowIndex * rowHeight) + (rowHeight / 2)
             }
-        //} else {
-//            if itemIndexOnCurrentRow < 3 {
-//                y = rowIndex / 2
-//            } else {
-//                y = 0
-//            }
-        //}
+        } else {
+            if oddColRange.contains(itemIndexOnCurrentRow) {
+                y = rowHeight * rowIndex
+            } else {
+                y = (rowIndex * rowHeight) + (rowHeight / 2)
+            }
+        }
+        
         return y
     }
     
     private func determinX2(_ itemIndexOnCurrentRow: Int, _ itemsCountOnCurrentRow: Int, _ contentWidth: CGFloat) -> CGFloat {
         let x: CGFloat
-        if itemIndexOnCurrentRow == 0 {
+        if itemIndexOnCurrentRow == 0 || itemIndexOnCurrentRow == 3 {
             x = 0
-        } else if itemIndexOnCurrentRow == 2 || itemIndexOnCurrentRow == 3 || itemIndexOnCurrentRow == 1 {
-            x = contentWidth / 3
+        } else if itemIndexOnCurrentRow == 1 || itemIndexOnCurrentRow == 4 {
+            x =  contentWidth / 3
         } else {
             x = contentWidth * 2 / 3
         }
-        
         return x
     }
     
@@ -479,13 +475,14 @@ class MosaicLayout: UICollectionViewLayout {
     
     private func determineWidth2(_ itemsCountOnCurrentRow: Int, _ itemIndexOnCurrentRow: Int, _ contentWidth: CGFloat) -> CGFloat {
         let width: CGFloat
-        width = contentWidth * 2 / 3
+        width = (contentWidth * 2 / 3) / 2
         return width
     }
     
     private func determineHeight2(_ itemsCountOnCurrentRow: Int, _ itemIndexOnCurrentRow: Int, _ maxImagesPerRow: Int, _ rowHeight: CGFloat) -> CGFloat {
         let height: CGFloat
-        if itemIndexOnCurrentRow < 4 {
+        let colRange = [0,1,3,4]
+        if colRange.contains(itemIndexOnCurrentRow) {
             height = rowHeight / 2
         } else {
             height = rowHeight
